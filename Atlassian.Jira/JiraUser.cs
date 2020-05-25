@@ -46,6 +46,8 @@
         public string Self { get; internal set; }
 
         internal string InternalIdentifier { get; set; }
+        
+        public string AvatarUrl { get; set; }
 
         public override string ToString()
         {

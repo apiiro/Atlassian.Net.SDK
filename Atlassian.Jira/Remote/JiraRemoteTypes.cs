@@ -590,6 +590,8 @@ namespace Atlassian.Jira.Remote
         public bool active { get; set; }
         public string locale { get; set; }
         public string self { get; set; }
+
+        public Dictionary<string, string> avatarUrls { get; set; }
     }
 
     /// <remarks/>

@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Atlassian.Jira.Remote
@@ -35,7 +36,8 @@ namespace Atlassian.Jira.Remote
                 Locale = remoteUser.locale,
                 Self = remoteUser.self,
                 Username = remoteUser.name,
-                InternalIdentifier = UserPrivacyEnabled ? remoteUser.accountId : remoteUser.name
+                InternalIdentifier = UserPrivacyEnabled ? remoteUser.accountId : remoteUser.name,
+                AvatarUrl = remoteUser.avatarUrls.Values.FirstOrDefault()
             };
         }
 
