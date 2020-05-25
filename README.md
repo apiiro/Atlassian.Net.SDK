@@ -1,5 +1,7 @@
 # Atlassian.NET SDK
 
+Forked from https://bitbucket.org/farmas/atlassian.net-sdk/src/master/
+
 Contains utilities for interacting with  [Atlassian JIRA](http://www.atlassian.com/software/jira).
 
 ## Download
