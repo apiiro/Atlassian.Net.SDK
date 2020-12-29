@@ -91,6 +91,17 @@ namespace Atlassian.Jira
         }
 
         /// <summary>
+        /// The list of the Avatar URL's
+        /// </summary>
+        public AvatarUrls AvatarUrls
+        {
+            get
+            {
+                return _remoteProject.avatarUrls;
+            }
+        }
+
+        /// <summary>
         /// Gets the issue types for the current project.
         /// </summary>
         /// <param name="token">Cancellation token for this operation.</param>

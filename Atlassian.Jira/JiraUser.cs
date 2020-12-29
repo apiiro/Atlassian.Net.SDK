@@ -1,4 +1,4 @@
-﻿namespace Atlassian.Jira
+namespace Atlassian.Jira
 {
     /// <summary>
     /// Represents a JIRA user.
@@ -45,24 +45,27 @@
         /// </summary>
         public string Self { get; internal set; }
 
+        /// <summary>
+        /// The list of the Avatar URL's for this user
+        /// </summary>
+        public AvatarUrls AvatarUrls { get; internal set; }
+
         internal string InternalIdentifier { get; set; }
-        
-        public string AvatarUrl { get; set; }
 
         public override string ToString()
         {
-            return Username;
+            return InternalIdentifier;
         }
 
         public override bool Equals(object other)
         {
             var otherAsThisType = other as JiraUser;
-            return otherAsThisType != null && Username.Equals(otherAsThisType.Username);
+            return otherAsThisType != null && InternalIdentifier.Equals(otherAsThisType.InternalIdentifier);
         }
 
         public override int GetHashCode()
         {
-            return Username.GetHashCode();
+            return InternalIdentifier.GetHashCode();
         }
     }
 }
