@@ -137,7 +137,7 @@ namespace Atlassian.Jira.Remote
         /// </summary>
         protected virtual Task<IRestResponse> ExecuteRawResquestAsync(IRestRequest request, CancellationToken token)
         {
-            return _restClient.ExecuteTaskAsync(request, token);
+            return _restClient.ExecuteAsync(request, token);
         }
 
         /// <summary>
@@ -194,7 +194,7 @@ namespace Atlassian.Jira.Remote
 
             if (!string.IsNullOrEmpty(response.ErrorMessage))
             {
-                throw new InvalidOperationException($"Error Message: {response.ErrorMessage}");
+                throw new InvalidOperationException($"Error Message: {response.ErrorMessage}\nContent: {content}\nCode: {response.StatusCode}", response.ErrorException);
             }
             else if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.Unauthorized)
             {
