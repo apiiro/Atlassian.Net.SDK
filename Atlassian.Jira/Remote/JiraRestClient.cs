@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -128,6 +129,10 @@ namespace Atlassian.Jira.Remote
         {
             LogRequest(request);
             var response = await ExecuteRawResquestAsync(request, token).ConfigureAwait(false);
+            if (!response.IsSuccessful && response.StatusCode != HttpStatusCode.TooManyRequests)
+            {
+                response = await ExecuteRawResquestAsync(request, token).ConfigureAwait(false);
+            }
             GetValidJsonFromResponse(request, response);
             return response;
         }
@@ -203,6 +208,10 @@ namespace Atlassian.Jira.Remote
             else if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 throw new ResourceNotFoundException($"Response Content: {content}");
+            }
+            else if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                throw new ResourceNotFoundException($"Rate limit exceeded. Response headers: {string.Join(", ", response.Headers.Select(header => $"{header.Name}: {header.Value}"))}");
             }
             else if ((int)response.StatusCode >= 400)
             {
