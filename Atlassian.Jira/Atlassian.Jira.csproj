@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PackageId>Atlassian.SDK</PackageId>
-    <Version>$(Version)</Version>
+    <PackageId>Apiiro.Atlassian.Jira</PackageId>
+    <Version>0.1.0</Version>
     <Authors>Federico Silva Armas</Authors>
     <Company>Federico Silva Armas</Company>
     <Product>Atlassian.SDK</Product>
@@ -10,13 +10,11 @@
     <PackageReleaseNotes>For change history, visit: https://bitbucket.org/farmas/atlassian.net-sdk/src/master/docs/change-history.md</PackageReleaseNotes>
     <Description>Utilities to interact with Atlassian products. Contains LinqToJira provider for querying JIRA Issue tracker (http://www.atlassian.com/software/jira).</Description>
     <PackageIconUrl>https://res.cloudinary.com/farmas/image/upload/v1581984204/atlassian/AtlassianIcon.png</PackageIconUrl>
-    <PackageProjectUrl>https://bitbucket.org/farmas/atlassian.net-sdk</PackageProjectUrl>
     <PackageLicenseExpression>BSD-2-Clause</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>$(Version)</AssemblyVersion>
-    <FileVersion>$(Version)</FileVersion>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <LangVersion>8</LangVersion>
+    <RepositoryUrl>https://github.com/apiiro/Atlassian.Net.SDK</RepositoryUrl>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Properties\**" />
