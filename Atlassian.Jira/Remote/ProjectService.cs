@@ -18,14 +18,8 @@ namespace Atlassian.Jira.Remote
 
         public async Task<IEnumerable<Project>> GetProjectsAsync(CancellationToken token = default(CancellationToken))
         {
-            var cache = _jira.Cache;
-            if (!cache.Projects.Any())
-            {
-                var remoteProjects = await _jira.RestClient.ExecuteRequestAsync<RemoteProject[]>(Method.GET, "rest/api/2/project?expand=lead,url", null, token).ConfigureAwait(false);
-                cache.Projects.TryAdd(remoteProjects.Select(p => new Project(_jira, p)));
-            }
-
-            return cache.Projects.Values;
+            var remoteProjects = await _jira.RestClient.ExecuteRequestAsync<RemoteProject[]>(Method.GET, "rest/api/2/project?expand=lead,url", null, token).ConfigureAwait(false);
+            return remoteProjects.Select(p => new Project(_jira, p));
         }
 
         public async Task<Project> GetProjectAsync(string projectKey, CancellationToken token = new CancellationToken())

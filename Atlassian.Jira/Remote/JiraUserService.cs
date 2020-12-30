@@ -54,16 +54,9 @@ namespace Atlassian.Jira.Remote
 
         public async Task<JiraUser> GetMyselfAsync(CancellationToken token = default(CancellationToken))
         {
-            var cache = _jira.Cache;
-
-            if (cache.CurrentUser == null)
-            {
-                var resource = "rest/api/2/myself";
-                var jiraUser = await _jira.RestClient.ExecuteRequestAsync<JiraUser>(Method.GET, resource, null, token);
-                cache.CurrentUser = jiraUser;
-            }
-
-            return cache.CurrentUser;
+            var resource = "rest/api/2/myself";
+            var jiraUser = await _jira.RestClient.ExecuteRequestAsync<JiraUser>(Method.GET, resource, null, token);
+            return jiraUser;
         }
     }
 }

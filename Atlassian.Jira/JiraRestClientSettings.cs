@@ -34,11 +34,6 @@ namespace Atlassian.Jira
         public IDictionary<string, ICustomFieldValueSerializer> CustomFieldSerializers { get; set; } = new Dictionary<string, ICustomFieldValueSerializer>();
 
         /// <summary>
-        /// Cache to store frequently accessed server items.
-        /// </summary>
-        public JiraCache Cache { get; set; } = new JiraCache();
-
-        /// <summary>
         /// The json global serializer settings to use.
         /// </summary>
         public JsonSerializerSettings JsonSerializerSettings { get; private set; } = new JsonSerializerSettings();
