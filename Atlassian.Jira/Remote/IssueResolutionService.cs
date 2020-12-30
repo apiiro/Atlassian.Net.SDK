@@ -18,15 +18,8 @@ namespace Atlassian.Jira.Remote
 
         public async Task<IEnumerable<IssueResolution>> GetResolutionsAsync(CancellationToken token)
         {
-            var cache = _jira.Cache;
-
-            if (!cache.Resolutions.Any())
-            {
-                var resolutions = await _jira.RestClient.ExecuteRequestAsync<RemoteResolution[]>(Method.GET, "rest/api/2/resolution", null, token).ConfigureAwait(false);
-                cache.Resolutions.TryAdd(resolutions.Select(r => new IssueResolution(r)));
-            }
-
-            return cache.Resolutions.Values;
+            var resolutions = await _jira.RestClient.ExecuteRequestAsync<RemoteResolution[]>(Method.GET, "rest/api/2/resolution", null, token).ConfigureAwait(false);
+            return resolutions.Select(r => new IssueResolution(r));
         }
     }
 }

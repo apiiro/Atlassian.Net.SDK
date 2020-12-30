@@ -88,20 +88,14 @@ namespace Atlassian.Jira.Remote
 
         public async Task<IEnumerable<IssueLinkType>> GetLinkTypesAsync(CancellationToken token = default(CancellationToken))
         {
-            var cache = _jira.Cache;
             var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
 
-            if (!cache.LinkTypes.Any())
-            {
-                var results = await _jira.RestClient.ExecuteRequestAsync(Method.GET, "rest/api/2/issueLinkType", null, token).ConfigureAwait(false);
-                var linkTypes = results["issueLinkTypes"]
-                    .Cast<JObject>()
-                    .Select(issueLinkJson => JsonConvert.DeserializeObject<IssueLinkType>(issueLinkJson.ToString(), serializerSettings));
+            var results = await _jira.RestClient.ExecuteRequestAsync(Method.GET, "rest/api/2/issueLinkType", null, token).ConfigureAwait(false);
+            var linkTypes = results["issueLinkTypes"]
+                .Cast<JObject>()
+                .Select(issueLinkJson => JsonConvert.DeserializeObject<IssueLinkType>(issueLinkJson.ToString(), serializerSettings));
 
-                cache.LinkTypes.TryAdd(linkTypes);
-            }
-
-            return cache.LinkTypes.Values;
+            return linkTypes;
         }
     }
 }

@@ -18,15 +18,8 @@ namespace Atlassian.Jira.Remote
 
         public async Task<IEnumerable<IssuePriority>> GetPrioritiesAsync(CancellationToken token = default(CancellationToken))
         {
-            var cache = _jira.Cache;
-
-            if (!cache.Priorities.Any())
-            {
-                var priorities = await _jira.RestClient.ExecuteRequestAsync<RemotePriority[]>(Method.GET, "rest/api/2/priority", null, token).ConfigureAwait(false);
-                cache.Priorities.TryAdd(priorities.Select(p => new IssuePriority(p)));
-            }
-
-            return cache.Priorities.Values;
+            var priorities = await _jira.RestClient.ExecuteRequestAsync<RemotePriority[]>(Method.GET, "rest/api/2/priority", null, token).ConfigureAwait(false);
+            return priorities.Select(p => new IssuePriority(p));
         }
     }
 }
