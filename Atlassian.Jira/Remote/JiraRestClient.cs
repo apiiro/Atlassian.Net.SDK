@@ -129,10 +129,6 @@ namespace Atlassian.Jira.Remote
         {
             LogRequest(request);
             var response = await ExecuteRawResquestAsync(request, token).ConfigureAwait(false);
-            if (!response.IsSuccessful && response.StatusCode != HttpStatusCode.TooManyRequests)
-            {
-                response = await ExecuteRawResquestAsync(request, token).ConfigureAwait(false);
-            }
             GetValidJsonFromResponse(request, response);
             return response;
         }
