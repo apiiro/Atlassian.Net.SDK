@@ -36,6 +36,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		docs\reference-jql.md = docs\reference-jql.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Atlassian.Jira.TestApp", "Atlassian.Jira.TestApp\Atlassian.Jira.TestApp.csproj", "{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -88,6 +90,18 @@ Global
 		{59EF77DF-1A5D-48AC-BC98-523C6BBAC288}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{59EF77DF-1A5D-48AC-BC98-523C6BBAC288}.Release|x86.ActiveCfg = Release|Any CPU
 		{59EF77DF-1A5D-48AC-BC98-523C6BBAC288}.Release|x86.Build.0 = Release|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Debug|x86.Build.0 = Debug|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Release|x86.ActiveCfg = Release|Any CPU
+		{D9687A03-EFCE-47C3-8262-EE0A2DF6BD5D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
