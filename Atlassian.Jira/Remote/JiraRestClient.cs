@@ -198,8 +198,19 @@ namespace Atlassian.Jira.Remote
 
             if (!string.IsNullOrEmpty(response.ErrorMessage))
             {
-                var headers = PrintResponseAsync(request).Result;
-                throw new InvalidOperationException($"Error Message: {response.ErrorMessage}\nContent: {content}\nCode: {response.StatusCode}\nHeaders: {headers}", response.ErrorException);
+                string headers = null;
+                try
+                {
+                    headers = GetResponseHeadersAsync(request).Result;
+                }
+                catch
+                {
+                    // ignored
+                }
+
+                throw new InvalidOperationException(
+                    $"Error Message: {response.ErrorMessage}\nContent: {content}\nCode: {response.StatusCode}\nHeaders: {headers}",
+                    response.ErrorException);
             }
             else if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.Unauthorized)
             {
@@ -247,7 +258,7 @@ namespace Atlassian.Jira.Remote
             }
         }
 
-        private async Task<string> PrintResponseAsync(IRestRequest request)
+        private async Task<string> GetResponseHeadersAsync(IRestRequest request)
         {
             try
             {
@@ -275,14 +286,13 @@ namespace Atlassian.Jira.Remote
                 client.DefaultRequestHeaders.Add("User-Agent", "RestSharp/106.11.7.0");
                 var response = await client.GetAsync($"{_restClient.BaseUrl}{request.Resource}");
                 var headers = response.Headers;
+
                 return $"Retry request attempt result = {Convert.ToBase64String(Encoding.ASCII.GetBytes(headers.ToString()))}";
             }
             catch (Exception exception)
             {
-                Trace.WriteLine("Failed to retry request");
+                return $"Failed to retry request: {exception.Message}";
             }
-
-            return null;
         }
     }
 }
