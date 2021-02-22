@@ -267,7 +267,12 @@ namespace Atlassian.Jira.Remote
                     AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
                 };
                 handler.ServerCertificateCustomValidationCallback += (sender, certificate, chain, errors) => true;
-                HttpClient.DefaultProxy = _restClient.Proxy;
+
+                if (_restClient.Proxy != null)
+                {
+                    HttpClient.DefaultProxy = _restClient.Proxy;
+                }
+
                 var client = new HttpClient(handler);
 
                 var authHeader = request.Parameters.FirstOrDefault(header => header.Name == "Authorization");
@@ -291,7 +296,7 @@ namespace Atlassian.Jira.Remote
             }
             catch (Exception exception)
             {
-                return $"Failed to retry request: {exception.Message}";
+                return $"Failed to retry request: {exception.Message}\n{exception.StackTrace}\n";
             }
         }
     }
