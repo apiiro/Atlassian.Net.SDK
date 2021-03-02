@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -198,19 +199,20 @@ namespace Atlassian.Jira.Remote
 
             if (!string.IsNullOrEmpty(response.ErrorMessage))
             {
-                string headers = null;
                 try
                 {
-                    headers = GetResponseHeadersAsync(request).Result;
+                    return FallbackToHttpClientOnFailureAsync(request).Result;
                 }
-                catch
+                catch (Exception exception)
                 {
-                    // ignored
+                    throw new InvalidOperationException(
+                        "Fallback to HttpClient failed.\n" +
+                        $"Original request error message: {response.ErrorMessage}\n" +
+                        $"Content: {content}\n" +
+                        $"Code: {response.StatusCode}",
+                        exception
+                    );
                 }
-
-                throw new InvalidOperationException(
-                    $"Error Message: {response.ErrorMessage}\nContent: {content}\nCode: {response.StatusCode}\nHeaders: {headers}",
-                    response.ErrorException);
             }
             else if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.Unauthorized)
             {
@@ -258,46 +260,41 @@ namespace Atlassian.Jira.Remote
             }
         }
 
-        private async Task<string> GetResponseHeadersAsync(IRestRequest request)
+        private async Task<JToken> FallbackToHttpClientOnFailureAsync(IRestRequest request)
         {
-            try
+            using var handler = new HttpClientHandler
             {
-                using var handler = new HttpClientHandler()
-                {
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-                };
-                handler.ServerCertificateCustomValidationCallback += (sender, certificate, chain, errors) => true;
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                ServerCertificateCustomValidationCallback = (sender, certificate, chain, errors) => true
+            };
 
-                if (_restClient.Proxy != null)
-                {
-                    HttpClient.DefaultProxy = _restClient.Proxy;
-                }
-
-                var client = new HttpClient(handler);
-
-                var authHeader = request.Parameters.FirstOrDefault(header => header.Name == "Authorization");
-                var splitAuthHeader = authHeader?.Value?.ToString()?.Split();
-
-                if (splitAuthHeader == null || splitAuthHeader.Length < 2)
-                {
-                    return null;
-                }
-
-                var authValue = splitAuthHeader[1];
-
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authValue);
-                client.DefaultRequestHeaders.Add("Connection", "Keep-Alive");
-                client.DefaultRequestHeaders.Add("Accept", "application/json, text/json, text/x-json, text/javascript, application/xml, text/xml");
-                client.DefaultRequestHeaders.Add("User-Agent", "RestSharp/106.11.7.0");
-                var response = await client.GetAsync($"{_restClient.BaseUrl}{request.Resource}");
-                var headers = response.Headers;
-
-                return $"Retry request attempt result = {Convert.ToBase64String(Encoding.ASCII.GetBytes(headers.ToString()))}";
-            }
-            catch (Exception exception)
+            if (_restClient.Proxy != null)
             {
-                return $"Failed to retry request: {exception.Message}\n{exception.StackTrace}\n";
+                HttpClient.DefaultProxy = _restClient.Proxy;
             }
+
+            var client = new HttpClient(handler);
+
+            var authHeader = request.Parameters.FirstOrDefault(header => header.Name == "Authorization");
+            var splitAuthHeader = authHeader?.Value?.ToString()?.Split();
+
+            if (splitAuthHeader == null || splitAuthHeader.Length < 2)
+            {
+                return null;
+            }
+
+            var authValue = splitAuthHeader[1];
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authValue);
+            client.DefaultRequestHeaders.Add("Connection", "Keep-Alive");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            var response = await client.GetAsync($"{_restClient.BaseUrl}{request.Resource}");
+
+            Trace.WriteLine(
+                $"Retry request attempt headers: {Convert.ToBase64String(Encoding.ASCII.GetBytes(response.Headers.ToString()))}");
+
+            return await JToken.LoadAsync(
+                new JsonTextReader(new StreamReader(await response.Content.ReadAsStreamAsync())));
         }
     }
 }
