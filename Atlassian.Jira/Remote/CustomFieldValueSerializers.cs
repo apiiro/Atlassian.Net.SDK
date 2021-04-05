@@ -18,7 +18,7 @@ namespace Atlassian.Jira.Remote
 
         public string[] FromJson(JToken json)
         {
-            return new string[1] { json[this._propertyName]?.ToString() };
+            return new string[1] {json[this._propertyName]?.ToString()};
         }
 
         public JToken ToJson(string[] values)
@@ -38,7 +38,7 @@ namespace Atlassian.Jira.Remote
 
         public string[] FromJson(JToken json)
         {
-            return ((JArray)json).Select(j => j[_propertyName].ToString()).ToArray();
+            return (json as JArray)?.Select(j => j[_propertyName]?.ToString()).Where(_ => !string.IsNullOrEmpty(_)).ToArray() ?? Array.Empty<string>();
         }
 
         public JToken ToJson(string[] values)
@@ -51,7 +51,7 @@ namespace Atlassian.Jira.Remote
     {
         public string[] FromJson(JToken json)
         {
-            return new string[1] { json.ToObject<string>() };
+            return new string[1] {json.ToObject<string>()};
         }
 
         public JToken ToJson(string[] values)
@@ -88,11 +88,11 @@ namespace Atlassian.Jira.Remote
             }
             else if (childOption == null || childOption["value"] == null)
             {
-                return new string[] { parentOption.ToString() };
+                return new string[] {parentOption.ToString()};
             }
             else
             {
-                return new string[2] { parentOption.ToString(), childOption["value"].ToString() };
+                return new string[2] {parentOption.ToString(), childOption["value"].ToString()};
             }
         }
 
@@ -104,7 +104,7 @@ namespace Atlassian.Jira.Remote
             }
             else if (values.Length == 1)
             {
-                return JToken.FromObject(new { value = values[0] });
+                return JToken.FromObject(new {value = values[0]});
             }
             else
             {
@@ -134,9 +134,9 @@ namespace Atlassian.Jira.Remote
         public string[] FromJson(JToken json)
         {
             return json.ToString()
-                .Split(new char[] { '{', '}', '[', ']', ',' })
+                .Split(new char[] {'{', '}', '[', ']', ','})
                 .Where(x => x.StartsWith(_propertyName))
-                .Select(x => x.Split(new char[] { '=' })[1])
+                .Select(x => x.Split(new char[] {'='})[1])
                 .ToArray();
         }
 
