@@ -71,4 +71,3 @@ Please open an issue if you encounter a bug, have suggestions or feature request
 
 Federico Silva Armas
 [http://federicosilva.net](http://federicosilva.net/)
-

@@ -215,7 +215,7 @@ namespace Atlassian.Jira.Remote
                 actionId = action.Id;
             }
 
-            updates = updates ?? new WorkflowTransitionUpdates();
+            updates ??= new WorkflowTransitionUpdates();
 
             var resource = String.Format("rest/api/2/issue/{0}/transitions", issue.Key.Value);
             var fieldProvider = issue as IRemoteIssueFieldProvider;
@@ -332,10 +332,8 @@ namespace Atlassian.Jira.Remote
             return PagedQueryResult<Comment>.FromJson((JObject)result, comments);
         }
 
-        public Task<IEnumerable<IssueTransition>> GetActionsAsync(string issueKey, CancellationToken token = default(CancellationToken))
-        {
-            return this.GetActionsAsync(issueKey, false, token);
-        }
+        public Task<IEnumerable<IssueTransition>> GetActionsAsync(string issueKey, CancellationToken token = default)
+            => GetActionsAsync(issueKey, false, token);
 
         public async Task<IEnumerable<IssueTransition>> GetActionsAsync(string issueKey, bool expandTransitionFields, CancellationToken token = default(CancellationToken))
         {
@@ -472,31 +470,38 @@ namespace Atlassian.Jira.Remote
             return _jira.RestClient.ExecuteRequestAsync(Method.DELETE, resource, null, token);
         }
 
-        public async Task<IDictionary<string, Issue>> GetIssuesAsync(IEnumerable<string> issueKeys, CancellationToken token = default(CancellationToken))
+        public async Task<IDictionary<string, Issue>> GetIssuesAsync(IEnumerable<string> issueKeys, CancellationToken token = default)
         {
-            if (issueKeys.Any())
-            {
-                var distinctKeys = issueKeys.Distinct();
-                var jql = String.Format("key in ({0})", String.Join(",", distinctKeys));
-                var options = new IssueSearchOptions(jql)
-                {
-                    MaxIssuesPerRequest = distinctKeys.Count(),
-                    ValidateQuery = false
-                };
-
-                var result = await this.GetIssuesFromJqlAsync(options, token).ConfigureAwait(false);
-                return result.ToDictionary<Issue, string>(i => i.Key.Value);
-            }
-            else
+            if (!issueKeys.Any())
             {
                 return new Dictionary<string, Issue>();
             }
+
+            var distinctIssueKeys = issueKeys.Distinct();
+            var jqlQuery = $"key in ({string.Join(",", distinctIssueKeys)})";
+            var startAtIndex = 0;
+            var issues = new List<Issue>();
+            IPagedQueryResult<Issue> query;
+
+            do
+            {
+                query = await GetIssuesFromJqlAsync(
+                        jqlQuery,
+                        100,
+                        startAtIndex,
+                        token
+                    )
+                    .ConfigureAwait(false);
+                issues.AddRange(query.ToList());
+
+                startAtIndex += 100;
+            } while (startAtIndex <= query.TotalItems);
+
+            return issues.ToDictionary(i => i.Key.Value);
         }
 
         public Task<IDictionary<string, Issue>> GetIssuesAsync(params string[] issueKeys)
-        {
-            return this.GetIssuesAsync(issueKeys, default(CancellationToken));
-        }
+            => GetIssuesAsync(issueKeys, default);
 
         public Task<IEnumerable<Comment>> GetCommentsAsync(string issueKey, CancellationToken token = default(CancellationToken))
         {
