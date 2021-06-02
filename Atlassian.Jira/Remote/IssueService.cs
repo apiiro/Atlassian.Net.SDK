@@ -15,8 +15,9 @@ namespace Atlassian.Jira.Remote
 {
     internal class IssueService : IIssueService
     {
-        private const int DEFAULT_MAX_ISSUES_PER_REQUEST = 20;
-        private const string ALL_FIELDS_QUERY_STRING = "*all";
+        private const int DefaultMaxIssuesPerRequest = 20;
+        private const string AllFieldsQueryString = "*all";
+        private const int MaxRetrievedIssuesPerRequest = 100;
 
         private readonly Jira _jira;
         private readonly JiraRestClientSettings _restSettings;
@@ -42,7 +43,7 @@ namespace Atlassian.Jira.Remote
 
         public bool ValidateQuery { get; set; } = true;
 
-        public int MaxIssuesPerRequest { get; set; } = DEFAULT_MAX_ISSUES_PER_REQUEST;
+        public int MaxIssuesPerRequest { get; set; } = DefaultMaxIssuesPerRequest;
 
         private async Task<JsonSerializerSettings> GetIssueSerializerSettingsAsync(CancellationToken token)
         {
@@ -64,7 +65,7 @@ namespace Atlassian.Jira.Remote
         public async Task<Issue> GetIssueAsync(string issueKey, CancellationToken token = default(CancellationToken))
         {
             var excludedFields = String.Join(",", _excludedFields.Select(field => $"-{field}"));
-            var fields = $"{ALL_FIELDS_QUERY_STRING},{excludedFields}";
+            var fields = $"{AllFieldsQueryString},{excludedFields}";
             var resource = $"rest/api/2/issue/{issueKey}?fields={fields}";
             var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resource, null, token).ConfigureAwait(false);
             var serializerSettings = await GetIssueSerializerSettingsAsync(token).ConfigureAwait(false);
@@ -95,13 +96,13 @@ namespace Atlassian.Jira.Remote
             var fields = new List<string>();
             if (options.AdditionalFields == null || !options.AdditionalFields.Any())
             {
-                fields.Add(ALL_FIELDS_QUERY_STRING);
+                fields.Add(AllFieldsQueryString);
                 fields.AddRange(_excludedFields.Select(field => $"-{field}"));
             }
             else if (options.FetchBasicFields)
             {
                 var excludedFields = _excludedFields.Where(excludedField => !options.AdditionalFields.Contains(excludedField, StringComparer.OrdinalIgnoreCase)).ToArray();
-                fields.Add(ALL_FIELDS_QUERY_STRING);
+                fields.Add(AllFieldsQueryString);
                 fields.AddRange(excludedFields.Select(field => $"-{field}"));
             }
             else
@@ -485,9 +486,10 @@ namespace Atlassian.Jira.Remote
 
             do
             {
+                // Jira limits each request, so we must page it out
                 query = await GetIssuesFromJqlAsync(
                         jqlQuery,
-                        100,
+                        MaxRetrievedIssuesPerRequest,
                         startAtIndex,
                         token
                     )
@@ -497,7 +499,7 @@ namespace Atlassian.Jira.Remote
                 startAtIndex += 100;
             } while (startAtIndex <= query.TotalItems);
 
-            return issues.ToDictionary(i => i.Key.Value);
+            return issues.ToDictionary(issue => issue.Key.Value);
         }
 
         public Task<IDictionary<string, Issue>> GetIssuesAsync(params string[] issueKeys)
