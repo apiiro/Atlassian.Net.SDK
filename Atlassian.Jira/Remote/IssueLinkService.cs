@@ -71,14 +71,23 @@ namespace Atlassian.Jira.Remote
                 issuesMap.Add(issue.Key.ToString(), issue);
             }
 
+            var receivedLinksCount = filteredIssueLinks.Count();
+
+            filteredIssueLinks = filteredIssueLinks.Where(issueLink =>
+            {
+                var (outwardIssueKey, inwardIssueKey) = GetLinkedIssueKeysFromJObject(issueLink, string.Empty);
+                return issuesMap.ContainsKey(outwardIssueKey) || issuesMap.ContainsKey(inwardIssueKey);
+            });
+
+            if (receivedLinksCount > filteredIssueLinks.Count())
+            {
+                Console.WriteLine($"We're missing {receivedLinksCount - filteredIssueLinks.Count()} issues, probably because they're archived");
+            }
 
             return filteredIssueLinks.Select(issueLink =>
             {
                 var linkType = JsonConvert.DeserializeObject<IssueLinkType>(issueLink["type"].ToString(), serializerSettings);
-                var outwardIssue = issueLink["outwardIssue"];
-                var inwardIssue = issueLink["inwardIssue"];
-                var outwardIssueKey = outwardIssue != null ? (string)outwardIssue["key"] : null;
-                var inwardIssueKey = inwardIssue != null ? (string)inwardIssue["key"] : null;
+                var (outwardIssueKey, inwardIssueKey) = GetLinkedIssueKeysFromJObject(issueLink, null);
                 return new IssueLink(
                     linkType,
                     outwardIssueKey == null ? issue : issuesMap[outwardIssueKey],
@@ -96,6 +105,15 @@ namespace Atlassian.Jira.Remote
                 .Select(issueLinkJson => JsonConvert.DeserializeObject<IssueLinkType>(issueLinkJson.ToString(), serializerSettings));
 
             return linkTypes;
+        }
+
+        private static (string outwardIssueKey, string inwardIssueKey) GetLinkedIssueKeysFromJObject(JObject issueLink, string defaultKeyValue)
+        {
+            var outwardIssue = issueLink["outwardIssue"];
+            var inwardIssue = issueLink["inwardIssue"];
+            var outwardIssueKey = outwardIssue != null ? (string) outwardIssue["key"] : defaultKeyValue;
+            var inwardIssueKey = inwardIssue != null ? (string) inwardIssue["key"] : defaultKeyValue;
+            return (outwardIssueKey, inwardIssueKey);
         }
     }
 }
