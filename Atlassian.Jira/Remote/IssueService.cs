@@ -499,7 +499,7 @@ namespace Atlassian.Jira.Remote
                 startAtIndex += 100;
             } while (startAtIndex <= query.TotalItems);
 
-            return issues.ToDictionary(issue => issue.Key.Value);
+            return DistinctBy(issues, issue => issue.Key.Value).ToDictionary(issue => issue.Key.Value);
         }
 
         public Task<IDictionary<string, Issue>> GetIssuesAsync(params string[] issueKeys)
@@ -687,6 +687,11 @@ namespace Atlassian.Jira.Remote
             {
                 // No-op. The resource that we are trying to delete doesn't exist anyway.
             }
+        }
+
+        public static IEnumerable<T> DistinctBy<T, TKey>(IEnumerable<T> items, Func<T, TKey> property)
+        {
+            return items.GroupBy(property).Select(x => x.First());
         }
     }
 }
