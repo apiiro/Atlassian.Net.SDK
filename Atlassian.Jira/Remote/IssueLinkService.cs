@@ -51,35 +51,35 @@ namespace Atlassian.Jira.Remote
                 throw new InvalidOperationException("There is no 'issueLinks' field on the issue data, make sure issue linking is turned on in JIRA.");
             }
 
-            var issueLinks = issueLinksJson.Cast<JObject>();
+            var issueLinks = issueLinksJson.Cast<JObject>().Where(_ => _ != null).ToList();
             var filteredIssueLinks = issueLinks;
 
             if (linkTypeNames != null)
             {
-                filteredIssueLinks = issueLinks.Where(link => linkTypeNames.Contains(link["type"]["name"].ToString(), StringComparer.InvariantCultureIgnoreCase));
+                filteredIssueLinks = issueLinks.Where(link => linkTypeNames.Contains(link["type"]["name"].ToString(), StringComparer.InvariantCultureIgnoreCase)).ToList();
             }
 
             var issuesToGet = filteredIssueLinks.Select(issueLink =>
             {
                 var issueJson = issueLink["outwardIssue"] ?? issueLink["inwardIssue"];
                 return issueJson["key"].Value<string>();
-            }).ToList();
+            }).Where(_ => !string.IsNullOrEmpty(_)).ToList();
 
-            var issuesMap = await _jira.Issues.GetIssuesAsync(issuesToGet, token).ConfigureAwait(false);
+            var issuesMap = await _jira.Issues.GetIssuesAsync(issuesToGet, token).ConfigureAwait(false) ?? new Dictionary<string, Issue>();
             if(!issuesMap.Keys.Contains(issue.Key.ToString()))
             {
                 issuesMap.Add(issue.Key.ToString(), issue);
             }
 
-            var receivedLinksCount = filteredIssueLinks.Count();
+            var receivedLinksCount = filteredIssueLinks.Count;
 
             filteredIssueLinks = filteredIssueLinks.Where(issueLink =>
             {
                 var (outwardIssueKey, inwardIssueKey) = GetLinkedIssueKeysFromJObject(issueLink, string.Empty);
                 return issuesMap.ContainsKey(outwardIssueKey) || issuesMap.ContainsKey(inwardIssueKey);
-            });
+            }).ToList();
 
-            if (receivedLinksCount > filteredIssueLinks.Count())
+            if (receivedLinksCount > filteredIssueLinks.Count)
             {
                 Console.WriteLine($"We're missing {receivedLinksCount - filteredIssueLinks.Count()} issues, probably because they're archived");
             }
@@ -87,12 +87,16 @@ namespace Atlassian.Jira.Remote
             return filteredIssueLinks.Select(issueLink =>
             {
                 var linkType = JsonConvert.DeserializeObject<IssueLinkType>(issueLink["type"].ToString(), serializerSettings);
+                if (linkType == null)
+                {
+                    return null;
+                }
                 var (outwardIssueKey, inwardIssueKey) = GetLinkedIssueKeysFromJObject(issueLink, null);
                 return new IssueLink(
                     linkType,
                     outwardIssueKey == null ? issue : issuesMap[outwardIssueKey],
                     inwardIssueKey == null ? issue : issuesMap[inwardIssueKey]);
-            });
+            }).Where(_ => _ != null);
         }
 
         public async Task<IEnumerable<IssueLinkType>> GetLinkTypesAsync(CancellationToken token = default(CancellationToken))
