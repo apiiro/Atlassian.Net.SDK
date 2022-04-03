@@ -57,6 +57,8 @@ namespace Atlassian.Jira
 
         internal string InternalIdentifier { get; set; }
 
+        public string TimeZone { get; set; }
+
         public override string ToString()
         {
             return InternalIdentifier;

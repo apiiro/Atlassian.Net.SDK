@@ -34,7 +34,8 @@ namespace Atlassian.Jira.Remote
                 Self = remoteUser.self,
                 Username = remoteUser.name,
                 AvatarUrls = remoteUser.avatarUrls,
-                InternalIdentifier = UserPrivacyEnabled ? remoteUser.accountId : remoteUser.name
+                InternalIdentifier = UserPrivacyEnabled ? remoteUser.accountId : remoteUser.name,
+                TimeZone = remoteUser.timeZone
             };
         }
 

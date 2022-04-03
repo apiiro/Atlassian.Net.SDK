@@ -591,6 +591,7 @@ namespace Atlassian.Jira.Remote
         public string locale { get; set; }
         public string self { get; set; }
         public AvatarUrls avatarUrls { get; set; }
+        public string timeZone { get; set; }
     }
 
     /// <remarks/>
