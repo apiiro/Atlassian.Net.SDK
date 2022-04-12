@@ -23,50 +23,32 @@ namespace Atlassian.Jira
 
         internal RemoteField RemoteField
         {
-            get
-            {
-                return this._remoteField;
-            }
+            get { return this._remoteField; }
         }
 
         public string CustomType
         {
-            get
-            {
-                return _remoteField.Schema?.Custom;
-            }
+            get { return _remoteField.Schema?.Custom; }
         }
 
         public string CustomIdentifier
         {
-            get
-            {
-                return _remoteField.Schema?.CustomId;
-            }
+            get { return _remoteField.Schema?.CustomId; }
         }
 
         public string Type
         {
-            get
-            {
-                return _remoteField.Schema?.Type;
-            }
+            get { return _remoteField.Schema?.Type; }
         }
 
         public string ItemsType
         {
-            get
-            {
-                return _remoteField.Schema?.Items;
-            }
+            get { return _remoteField.Schema?.Items; }
         }
 
         public bool IsRequired
         {
-            get
-            {
-                return _remoteField.IsRequired;
-            }
+            get { return _remoteField.IsRequired; }
         }
     }
 }
