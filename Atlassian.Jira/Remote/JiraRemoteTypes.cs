@@ -1810,6 +1810,9 @@ namespace Atlassian.Jira.Remote
         [JsonProperty("custom")]
         public bool IsCustomField { get; set; }
 
+        [JsonProperty("required")]
+        public bool IsRequired { get; set; }
+
         [JsonProperty("schema")]
         public RemoteFieldSchema Schema { get; set; }
     }
