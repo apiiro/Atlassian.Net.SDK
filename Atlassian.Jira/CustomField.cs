@@ -44,5 +44,29 @@ namespace Atlassian.Jira
                 return _remoteField.Schema?.CustomId;
             }
         }
+
+        public string Type
+        {
+            get
+            {
+                return _remoteField.Schema?.Type;
+            }
+        }
+
+        public string ItemsType
+        {
+            get
+            {
+                return _remoteField.Schema?.Items;
+            }
+        }
+
+        public bool IsRequired
+        {
+            get
+            {
+                return _remoteField.IsRequired;
+            }
+        }
     }
 }
