@@ -1,5 +1,6 @@
 ﻿using System;
 using Atlassian.Jira.Remote;
+using Newtonsoft.Json.Linq;
 
 namespace Atlassian.Jira
 {
@@ -32,5 +33,7 @@ namespace Atlassian.Jira
         public string ItemsType => _remoteField.Schema?.Items;
 
         public bool IsRequired => _remoteField.IsRequired;
+
+        public JArray AllowedValues => _remoteField.AllowedValues;
     }
 }
