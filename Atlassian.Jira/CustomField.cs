@@ -27,13 +27,5 @@ namespace Atlassian.Jira
         public string CustomType => _remoteField.Schema?.Custom;
 
         public string CustomIdentifier => _remoteField.Schema?.CustomId;
-
-        public string Type => _remoteField.Schema?.Type;
-
-        public string ItemsType => _remoteField.Schema?.Items;
-
-        public bool IsRequired => _remoteField.IsRequired;
-
-        public JArray AllowedValues => _remoteField.AllowedValues;
     }
 }
