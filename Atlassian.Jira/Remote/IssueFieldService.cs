@@ -101,7 +101,7 @@ namespace Atlassian.Jira.Remote
             var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
             var requiredFields = jProject["issuetypes"]
                 .SelectMany(issueType => GetRequiredFieldsFromIssueType(issueType, serializerSettings));
-            var distinctFields = requiredFields.GroupBy(c => c.name).Select(g => g.First());
+            var distinctFields = requiredFields.GroupBy(c => c.Key).Select(g => g.First());
 
             return distinctFields;
         }
