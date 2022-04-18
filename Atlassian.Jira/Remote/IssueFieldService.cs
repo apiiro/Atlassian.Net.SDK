@@ -72,6 +72,40 @@ namespace Atlassian.Jira.Remote
             return distinctFields;
         }
 
+        public async Task<IEnumerable<RemoteField>> GetRequiredFieldsForProjectAndIssueTypeAsync(string projectKey, string issueTypeId, CancellationToken token = default(CancellationToken))
+        {
+            var resource = $"rest/api/2/issue/createmeta?expand=projects.issuetypes.fields";
+
+            if (!String.IsNullOrEmpty(projectKey))
+            {
+                resource += $"&projectKeys={projectKey}";
+            }
+            else
+            {
+                throw new InvalidOperationException("Project Key is empty.");
+            }
+
+            if (!String.IsNullOrEmpty(issueTypeId))
+            {
+                resource += $"&issuetypeIds={issueTypeId}";
+            }
+
+            var jObject = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resource, null, token).ConfigureAwait(false);
+            var jProject = jObject["projects"].FirstOrDefault();
+
+            if (jProject == null)
+            {
+                throw new InvalidOperationException($"Project with key '{projectKey}' was not found on the Jira server.");
+            }
+
+            var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
+            var requiredFields = jProject["issuetypes"]
+                .SelectMany(issueType => GetRequiredFieldsFromIssueType(issueType, serializerSettings));
+            var distinctFields = requiredFields.GroupBy(c => c.name).Select(g => g.First());
+
+            return distinctFields;
+        }
+
         public Task<IEnumerable<CustomField>> GetCustomFieldsForProjectAsync(string projectKey, CancellationToken token = default(CancellationToken))
         {
             var options = new CustomFieldFetchOptions();
@@ -86,6 +120,14 @@ namespace Atlassian.Jira.Remote
                 .Where(f => f.Name.StartsWith("customfield_", StringComparison.OrdinalIgnoreCase))
                 .Select(f => JsonConvert.DeserializeObject<RemoteField>(f.Value.ToString(), serializerSettings))
                 .Select(remoteField => new CustomField(remoteField));
+        }
+
+        private static IEnumerable<RemoteField> GetRequiredFieldsFromIssueType(JToken issueType,
+            JsonSerializerSettings serializerSettings)
+        {
+            return ((JObject)issueType["fields"]).Properties()
+                .Select(f => JsonConvert.DeserializeObject<RemoteField>(f.Value.ToString(), serializerSettings))
+                .Where(field => field.IsRequired);
         }
     }
 }

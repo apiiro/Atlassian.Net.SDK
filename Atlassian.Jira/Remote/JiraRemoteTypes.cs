@@ -1807,6 +1807,9 @@ namespace Atlassian.Jira.Remote
     [System.Xml.Serialization.SoapTypeAttribute(Namespace = "http://beans.soap.rpc.jira.atlassian.com")]
     public partial class RemoteField : AbstractNamedRemoteEntity
     {
+        [JsonProperty("key")]
+        public string Key { get; set; }
+
         [JsonProperty("custom")]
         public bool IsCustomField { get; set; }
 

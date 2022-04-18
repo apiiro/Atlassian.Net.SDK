@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Atlassian.Jira.Remote;
 
 namespace Atlassian.Jira
 {
@@ -15,6 +16,15 @@ namespace Atlassian.Jira
         /// </summary>
         /// <param name="token">Cancellation token for this operation.</param>
         Task<IEnumerable<CustomField>> GetCustomFieldsAsync(CancellationToken token = default(CancellationToken));
+
+        /// <summary>
+        /// Returns all required fields within JIRA for the project and issue type id specified.
+        /// </summary>
+        /// <param name="projectKey">The project key to retrieve all the required fields from.</param>
+        /// <param name="issueTypeId">The issue type id to retrieve all the required fields from.</param>
+        /// <param name="token">Cancellation token for this operation.</param>
+        Task<IEnumerable<RemoteField>> GetRequiredFieldsForProjectAndIssueTypeAsync(string projectKey, string issueTypeId,
+            CancellationToken token = default(CancellationToken));
 
         /// <summary>
         /// Returns custom fields within JIRA given the options specified.
