@@ -23,7 +23,7 @@ namespace Atlassian.Jira
         /// <param name="projectKey">The project key to retrieve all the required fields from.</param>
         /// <param name="issueTypeId">The issue type id to retrieve all the required fields from.</param>
         /// <param name="token">Cancellation token for this operation.</param>
-        Task<IEnumerable<RemoteField>> GetCreateScreenSchemaForProjectAndIssueTypeAsync(string projectKey, string issueTypeId,
+        Task<IEnumerable<RemoteField>> GetCreateFieldsSchemaForProjectAndIssueTypeAsync(string projectKey, string issueTypeId,
             CancellationToken token = default(CancellationToken));
 
         /// <summary>

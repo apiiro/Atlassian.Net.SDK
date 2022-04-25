@@ -70,7 +70,7 @@ namespace Atlassian.Jira.Remote
             return distinctFields;
         }
 
-        public async Task<IEnumerable<RemoteField>> GetCreateScreenSchemaForProjectAndIssueTypeAsync(string projectKey, string issueTypeId, CancellationToken token = default(CancellationToken))
+        public async Task<IEnumerable<RemoteField>> GetCreateFieldsSchemaForProjectAndIssueTypeAsync(string projectKey, string issueTypeId, CancellationToken token = default(CancellationToken))
         {
             var resource = $"rest/api/2/issue/createmeta?expand=projects.issuetypes.fields";
 
@@ -97,10 +97,10 @@ namespace Atlassian.Jira.Remote
             }
 
             var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
-            var requiredFields = jProject["issuetypes"]
+            var fields = jProject["issuetypes"]
                 .SelectMany(issueType => ((JObject)issueType["fields"]).Properties()
                     .Select(f => JsonConvert.DeserializeObject<RemoteField>(f.Value.ToString(), serializerSettings)));
-            var distinctFields = requiredFields.GroupBy(c => c.Key).Select(g => g.First());
+            var distinctFields = fields.GroupBy(c => c.Key).Select(g => g.First());
 
             return distinctFields;
         }
