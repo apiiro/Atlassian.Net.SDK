@@ -1810,6 +1810,9 @@ namespace Atlassian.Jira.Remote
         [JsonProperty("key")]
         public string Key { get; set; }
 
+        [JsonProperty("fieldId")]
+        public string FieldId { get; set; }
+
         [JsonProperty("custom")]
         public bool IsCustomField { get; set; }
 
@@ -1821,6 +1824,8 @@ namespace Atlassian.Jira.Remote
 
         [JsonProperty("allowedValues")]
         public JArray AllowedValues { get; set; }
+
+        public string Id => Key ?? FieldId;
     }
 
     public class RemoteFieldSchema
