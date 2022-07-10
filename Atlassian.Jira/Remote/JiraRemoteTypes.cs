@@ -1825,7 +1825,7 @@ namespace Atlassian.Jira.Remote
         [JsonProperty("allowedValues")]
         public JArray AllowedValues { get; set; }
 
-        public string Id => Key ?? FieldId;
+        public string FieldKey => FieldId ?? Key;
     }
 
     public class RemoteFieldSchema
