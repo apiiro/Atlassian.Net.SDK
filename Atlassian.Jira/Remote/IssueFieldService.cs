@@ -100,7 +100,7 @@ namespace Atlassian.Jira.Remote
             var fields = jProject["issuetypes"]
                 .SelectMany(issueType => ((JObject)issueType["fields"]).Properties()
                     .Select(f => JsonConvert.DeserializeObject<RemoteField>(f.Value.ToString(), serializerSettings)));
-            var distinctFields = fields.GroupBy(c => c.Id).Select(g => g.First());
+            var distinctFields = fields.GroupBy(c => c.FieldKey).Select(g => g.First());
 
             return distinctFields;
         }
