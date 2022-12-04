@@ -70,20 +70,18 @@ namespace Atlassian.Jira.Remote
             return distinctFields;
         }
 
-        public async Task<IEnumerable<RemoteField>> GetCreateFieldsSchemaForProjectAndIssueTypeAsync(string projectKey, string issueTypeId, CancellationToken token = default(CancellationToken))
+        public async Task<IReadOnlyDictionary<string, IReadOnlyCollection<RemoteField>>> GetCreateFieldsSchemaForProjectAndIssueTypeAsync(string projectKey, string issueTypeId = null, CancellationToken token = default(CancellationToken))
         {
-            var resource = $"rest/api/2/issue/createmeta?expand=projects.issuetypes.fields";
+            var resource = "rest/api/2/issue/createmeta?expand=projects.issuetypes.fields";
 
-            if (!String.IsNullOrEmpty(projectKey))
+            if (string.IsNullOrEmpty(projectKey))
             {
-                resource += $"&projectKeys={projectKey}";
-            }
-            else
-            {
-                throw new InvalidOperationException("Project Key is empty.");
+                throw new InvalidOperationException("Project key is empty.");
             }
 
-            if (!String.IsNullOrEmpty(issueTypeId))
+            resource += $"&projectKeys={projectKey}";
+
+            if (!string.IsNullOrEmpty(issueTypeId))
             {
                 resource += $"&issuetypeIds={issueTypeId}";
             }
@@ -97,12 +95,15 @@ namespace Atlassian.Jira.Remote
             }
 
             var serializerSettings = _jira.RestClient.Settings.JsonSerializerSettings;
-            var fields = jProject["issuetypes"]
-                .SelectMany(issueType => ((JObject)issueType["fields"]).Properties()
-                    .Select(f => JsonConvert.DeserializeObject<RemoteField>(f.Value.ToString(), serializerSettings)));
-            var distinctFields = fields.GroupBy(c => c.FieldKey).Select(g => g.First());
+            var results = new Dictionary<string, IReadOnlyCollection<RemoteField>>();
+            foreach (var issueType in jProject["issuetypes"])
+            {
+                results[(string)issueType["id"]] = ((JObject)issueType["fields"]).Properties()
+                    .Select(f => JsonConvert.DeserializeObject<RemoteField>(f.Value.ToString(), serializerSettings))
+                    .ToList();
+            }
 
-            return distinctFields;
+            return results;
         }
 
         public Task<IEnumerable<CustomField>> GetCustomFieldsForProjectAsync(string projectKey, CancellationToken token = default(CancellationToken))
