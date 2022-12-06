@@ -25,6 +25,8 @@ namespace Atlassian.Jira
         /// <summary>
         /// Returns the issue types and components within JIRA for the project specified.
         /// </summary>
-        Task<(IEnumerable<IssueType>, IEnumerable<ProjectComponent>)> GetProjectIssueTypesAndComponentsAsync(string projectKey, CancellationToken token = default(CancellationToken));
+        Task<(IEnumerable<IssueType> IssueTypes, IEnumerable<ProjectComponent> Components)>
+            GetProjectIssueTypesAndComponentsAsync(string projectKey,
+                CancellationToken token = default(CancellationToken));
     }
 }

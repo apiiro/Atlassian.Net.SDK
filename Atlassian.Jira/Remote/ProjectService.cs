@@ -30,7 +30,7 @@ namespace Atlassian.Jira.Remote
             return new Project(_jira, remoteProject);
         }
 
-        public async Task<(IEnumerable<IssueType>, IEnumerable<ProjectComponent>)>
+        public async Task<(IEnumerable<IssueType> IssueTypes, IEnumerable<ProjectComponent> Components)>
             GetProjectIssueTypesAndComponentsAsync(string projectKey, CancellationToken token = default)
         {
             var resource = String.Format("rest/api/2/project/{0}", projectKey);

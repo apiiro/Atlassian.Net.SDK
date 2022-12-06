@@ -107,7 +107,7 @@ namespace Atlassian.Jira
         /// <param name="token">Cancellation token for this operation.</param>
         public async Task<IEnumerable<IssueType>> GetIssueTypesAsync(CancellationToken token = default(CancellationToken))
         {
-            return (await _jira.Projects.GetProjectIssueTypesAndComponentsAsync(Key, token)).Item1;
+            return (await _jira.Projects.GetProjectIssueTypesAndComponentsAsync(Key, token)).IssueTypes;
         }
 
         /// <summary>
