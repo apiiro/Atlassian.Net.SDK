@@ -818,6 +818,8 @@ namespace Atlassian.Jira.Remote
 
         public AvatarUrls avatarUrls { get; set; }
 
+        public bool archived { get; set; }
+
         /// <remarks/>
         [System.Xml.Serialization.SoapElementAttribute(IsNullable = true)]
         public string description

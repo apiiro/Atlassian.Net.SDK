@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <PackageId>Apiiro.Atlassian.Jira</PackageId>
-    <Version>0.1.23</Version>
+    <Version>0.1.24</Version>
     <Authors>Federico Silva Armas</Authors>
     <Company>Federico Silva Armas</Company>
     <Product>Atlassian.SDK</Product>
