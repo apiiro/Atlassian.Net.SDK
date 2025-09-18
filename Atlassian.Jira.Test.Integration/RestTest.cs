@@ -77,7 +77,7 @@ namespace Atlassian.Jira.Test.Integration
             issue.SaveChanges();
 
             var rawBody = String.Format("{{ \"jql\": \"Key=\\\"{0}\\\"\" }}", issue.Key.Value);
-            var json = jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/2/search", rawBody).Result;
+            var json = jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", rawBody).Result;
 
             Assert.Equal(issue.Key.Value, json["issues"][0]["key"].ToString());
         }

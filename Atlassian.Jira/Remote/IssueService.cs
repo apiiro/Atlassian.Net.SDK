@@ -113,13 +113,9 @@ namespace Atlassian.Jira.Remote
             var parameters = new
             {
                 jql = options.Jql,
-                startAt = options.StartAt,
-                maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
-                validateQuery = options.ValidateQuery,
-                fields = fields
             };
 
-            var result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/2/search", parameters, token).ConfigureAwait(false);
+            var result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", parameters, token).ConfigureAwait(false);
             var serializerSettings = await this.GetIssueSerializerSettingsAsync(token).ConfigureAwait(false);
             var issues = result["issues"]
                 .Cast<JObject>()
