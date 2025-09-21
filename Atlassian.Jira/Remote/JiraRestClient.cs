@@ -25,7 +25,7 @@ namespace Atlassian.Jira.Remote
         private readonly JiraRestClientSettings _clientSettings;
 
         /// <summary>
-        /// Creates a new instance of the JiraRestClient class for Basic auth.
+        /// Creates a new instance of the JiraRestClient class.
         /// </summary>
         /// <param name="url">Url to the JIRA server.</param>
         /// <param name="username">Username used to authenticate.</param>
@@ -33,17 +33,6 @@ namespace Atlassian.Jira.Remote
         /// <param name="settings">Settings to configure the rest client.</param>
         public JiraRestClient(string url, string username = null, string password = null, JiraRestClientSettings settings = null)
             : this(url, new HttpBasicAuthenticator(username, password), settings)
-        {
-        }
-
-        /// <summary>
-        /// Creates a new instance of the JiraRestClient class for Bearer auth.
-        /// </summary>
-        /// <param name="url">Url to the JIRA server.</param>
-        /// <param name="token">Token used to authenticate.</param>
-        /// <param name="settings">Settings to configure the rest client.</param>
-        public JiraRestClient(string url, string token, JiraRestClientSettings settings = null)
-            : this(url, new JwtAuthenticator(token), settings)
         {
         }
 

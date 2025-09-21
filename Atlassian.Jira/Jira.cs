@@ -27,7 +27,7 @@ namespace Atlassian.Jira
         }
 
         /// <summary>
-        /// Creates a JIRA rest client with Basic auth.
+        /// Creates a JIRA rest client.
         /// </summary>
         /// <param name="url">Url to the JIRA server.</param>
         /// <param name="username">Username used to authenticate.</param>
@@ -38,21 +38,6 @@ namespace Atlassian.Jira
         {
             settings = settings ?? new JiraRestClientSettings();
             var restClient = new JiraRestClient(url, username, password, settings);
-
-            return CreateRestClient(restClient);
-        }
-
-        /// <summary>
-        /// Creates a JIRA rest client with Bearer auth.
-        /// </summary>
-        /// <param name="url">Url to the JIRA server.</param>
-        /// <param name="token">Token used to authenticate.</param>
-        /// <param name="settings">Settings to configure the rest client.</param>
-        /// <returns>Jira object configured to use REST API.</returns>
-        public static Jira CreateTokenRestClient(string url, string token, JiraRestClientSettings settings = null)
-        {
-            settings ??= new JiraRestClientSettings();
-            var restClient = new JiraRestClient(url, token, settings);
 
             return CreateRestClient(restClient);
         }
