@@ -15,8 +15,9 @@ namespace Atlassian.Jira.Remote
 {
     internal class IssueService : IIssueService
     {
-        private const int DEFAULT_MAX_ISSUES_PER_REQUEST = 20;
-        private const string ALL_FIELDS_QUERY_STRING = "*all";
+        private const int DefaultMaxIssuesPerRequest = 20;
+        private const string AllFieldsQueryString = "*all";
+        private const int MaxRetrievedIssuesPerRequest = 100;
 
         private readonly Jira _jira;
         private readonly JiraRestClientSettings _restSettings;
@@ -42,7 +43,7 @@ namespace Atlassian.Jira.Remote
 
         public bool ValidateQuery { get; set; } = true;
 
-        public int MaxIssuesPerRequest { get; set; } = DEFAULT_MAX_ISSUES_PER_REQUEST;
+        public int MaxIssuesPerRequest { get; set; } = DefaultMaxIssuesPerRequest;
 
         private async Task<JsonSerializerSettings> GetIssueSerializerSettingsAsync(CancellationToken token)
         {
@@ -64,7 +65,7 @@ namespace Atlassian.Jira.Remote
         public async Task<Issue> GetIssueAsync(string issueKey, CancellationToken token = default(CancellationToken))
         {
             var excludedFields = String.Join(",", _excludedFields.Select(field => $"-{field}"));
-            var fields = $"{ALL_FIELDS_QUERY_STRING},{excludedFields}";
+            var fields = $"{AllFieldsQueryString},{excludedFields}";
             var resource = $"rest/api/2/issue/{issueKey}?fields={fields}";
             var response = await _jira.RestClient.ExecuteRequestAsync(Method.GET, resource, null, token).ConfigureAwait(false);
             var serializerSettings = await GetIssueSerializerSettingsAsync(token).ConfigureAwait(false);
@@ -95,13 +96,13 @@ namespace Atlassian.Jira.Remote
             var fields = new List<string>();
             if (options.AdditionalFields == null || !options.AdditionalFields.Any())
             {
-                fields.Add(ALL_FIELDS_QUERY_STRING);
+                fields.Add(AllFieldsQueryString);
                 fields.AddRange(_excludedFields.Select(field => $"-{field}"));
             }
             else if (options.FetchBasicFields)
             {
                 var excludedFields = _excludedFields.Where(excludedField => !options.AdditionalFields.Contains(excludedField, StringComparer.OrdinalIgnoreCase)).ToArray();
-                fields.Add(ALL_FIELDS_QUERY_STRING);
+                fields.Add(AllFieldsQueryString);
                 fields.AddRange(excludedFields.Select(field => $"-{field}"));
             }
             else
@@ -114,9 +115,10 @@ namespace Atlassian.Jira.Remote
                 jql = options.Jql,
                 maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
                 fields = fields
+
             };
 
-            var result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/2/search", parameters, token).ConfigureAwait(false);
+            var result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", parameters, token).ConfigureAwait(false);
             var serializerSettings = await this.GetIssueSerializerSettingsAsync(token).ConfigureAwait(false);
             var issues = result["issues"]
                 .Cast<JObject>()
@@ -213,7 +215,7 @@ namespace Atlassian.Jira.Remote
                 actionId = action.Id;
             }
 
-            updates = updates ?? new WorkflowTransitionUpdates();
+            updates ??= new WorkflowTransitionUpdates();
 
             var resource = String.Format("rest/api/2/issue/{0}/transitions", issue.Key.Value);
             var fieldProvider = issue as IRemoteIssueFieldProvider;
@@ -330,10 +332,8 @@ namespace Atlassian.Jira.Remote
             return PagedQueryResult<Comment>.FromJson((JObject)result, comments);
         }
 
-        public Task<IEnumerable<IssueTransition>> GetActionsAsync(string issueKey, CancellationToken token = default(CancellationToken))
-        {
-            return this.GetActionsAsync(issueKey, false, token);
-        }
+        public Task<IEnumerable<IssueTransition>> GetActionsAsync(string issueKey, CancellationToken token = default)
+            => GetActionsAsync(issueKey, false, token);
 
         public async Task<IEnumerable<IssueTransition>> GetActionsAsync(string issueKey, bool expandTransitionFields, CancellationToken token = default(CancellationToken))
         {
@@ -470,31 +470,39 @@ namespace Atlassian.Jira.Remote
             return _jira.RestClient.ExecuteRequestAsync(Method.DELETE, resource, null, token);
         }
 
-        public async Task<IDictionary<string, Issue>> GetIssuesAsync(IEnumerable<string> issueKeys, CancellationToken token = default(CancellationToken))
+        public async Task<IDictionary<string, Issue>> GetIssuesAsync(IEnumerable<string> issueKeys, CancellationToken token = default)
         {
-            if (issueKeys.Any())
-            {
-                var distinctKeys = issueKeys.Distinct();
-                var jql = String.Format("key in ({0})", String.Join(",", distinctKeys));
-                var options = new IssueSearchOptions(jql)
-                {
-                    MaxIssuesPerRequest = distinctKeys.Count(),
-                    ValidateQuery = false
-                };
-
-                var result = await this.GetIssuesFromJqlAsync(options, token).ConfigureAwait(false);
-                return result.ToDictionary<Issue, string>(i => i.Key.Value);
-            }
-            else
+            if (!issueKeys.Any())
             {
                 return new Dictionary<string, Issue>();
             }
+
+            var distinctIssueKeys = issueKeys.Distinct();
+            var jqlQuery = $"key in ({string.Join(",", distinctIssueKeys)})";
+            var startAtIndex = 0;
+            var issues = new List<Issue>();
+            IPagedQueryResult<Issue> query;
+
+            do
+            {
+                // Jira limits each request, so we must page it out
+                query = await GetIssuesFromJqlAsync(
+                        jqlQuery,
+                        MaxRetrievedIssuesPerRequest,
+                        startAtIndex,
+                        token
+                    )
+                    .ConfigureAwait(false);
+                issues.AddRange(query.ToList());
+
+                startAtIndex += 100;
+            } while (startAtIndex <= query.TotalItems);
+
+            return DistinctBy(issues, issue => issue.Key.Value).ToDictionary(issue => issue.Key.Value);
         }
 
         public Task<IDictionary<string, Issue>> GetIssuesAsync(params string[] issueKeys)
-        {
-            return this.GetIssuesAsync(issueKeys, default(CancellationToken));
-        }
+            => GetIssuesAsync(issueKeys, default);
 
         public Task<IEnumerable<Comment>> GetCommentsAsync(string issueKey, CancellationToken token = default(CancellationToken))
         {
@@ -678,6 +686,11 @@ namespace Atlassian.Jira.Remote
             {
                 // No-op. The resource that we are trying to delete doesn't exist anyway.
             }
+        }
+
+        public static IEnumerable<T> DistinctBy<T, TKey>(IEnumerable<T> items, Func<T, TKey> property)
+        {
+            return items.GroupBy(property).Select(x => x.First());
         }
     }
 }

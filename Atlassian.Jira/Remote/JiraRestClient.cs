@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -137,7 +142,7 @@ namespace Atlassian.Jira.Remote
         /// </summary>
         protected virtual Task<IRestResponse> ExecuteRawResquestAsync(IRestRequest request, CancellationToken token)
         {
-            return _restClient.ExecuteTaskAsync(request, token);
+            return _restClient.ExecuteAsync(request, token);
         }
 
         /// <summary>
@@ -194,7 +199,20 @@ namespace Atlassian.Jira.Remote
 
             if (!string.IsNullOrEmpty(response.ErrorMessage))
             {
-                throw new InvalidOperationException($"Error Message: {response.ErrorMessage}");
+                try
+                {
+                    return FallbackToHttpClientOnFailureAsync(request).Result;
+                }
+                catch (Exception exception)
+                {
+                    throw new InvalidOperationException(
+                        "Fallback to HttpClient failed.\n" +
+                        $"Original request error message: {response.ErrorMessage}\n" +
+                        $"Content: {content}\n" +
+                        $"Code: {response.StatusCode}",
+                        exception
+                    );
+                }
             }
             else if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.Unauthorized)
             {
@@ -203,6 +221,10 @@ namespace Atlassian.Jira.Remote
             else if (response.StatusCode == HttpStatusCode.NotFound)
             {
                 throw new ResourceNotFoundException($"Response Content: {content}");
+            }
+            else if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                throw new ResourceNotFoundException($"Rate limit exceeded. Response headers: {string.Join(", ", response.Headers.Select(header => $"{header.Name}: {header.Value}"))}");
             }
             else if ((int)response.StatusCode >= 400)
             {
@@ -236,6 +258,43 @@ namespace Atlassian.Jira.Remote
 
                 return parsedContent;
             }
+        }
+
+        private async Task<JToken> FallbackToHttpClientOnFailureAsync(IRestRequest request)
+        {
+            using var handler = new HttpClientHandler
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                ServerCertificateCustomValidationCallback = (sender, certificate, chain, errors) => true
+            };
+
+            if (_restClient.Proxy != null)
+            {
+                HttpClient.DefaultProxy = _restClient.Proxy;
+            }
+
+            var client = new HttpClient(handler);
+
+            var authHeader = request.Parameters.FirstOrDefault(header => header.Name == "Authorization");
+            var splitAuthHeader = authHeader?.Value?.ToString()?.Split();
+
+            if (splitAuthHeader == null || splitAuthHeader.Length < 2)
+            {
+                return null;
+            }
+
+            var authValue = splitAuthHeader[1];
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authValue);
+            client.DefaultRequestHeaders.Add("Connection", "Keep-Alive");
+            client.DefaultRequestHeaders.Add("Accept", "application/json");
+            var response = await client.GetAsync($"{_restClient.BaseUrl}{request.Resource}");
+
+            Trace.WriteLine(
+                $"Retry request attempt headers: {Convert.ToBase64String(Encoding.ASCII.GetBytes(response.Headers.ToString()))}");
+
+            return await JToken.LoadAsync(
+                new JsonTextReader(new StreamReader(await response.Content.ReadAsStreamAsync())));
         }
     }
 }

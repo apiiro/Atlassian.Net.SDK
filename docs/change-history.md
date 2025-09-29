@@ -1,5 +1,21 @@
 # Change History
 
+## Version 12.3.0 (12/05/2020)
+
+- [Issue 562](https://bitbucket.org/farmas/atlassian.net-sdk/issues/562) Adds a new sprint serializer that can handle the new sprint format.
+- [Issue 570](https://bitbucket.org/farmas/atlassian.net-sdk/issues/570) Fixes exception in JiraUser when using comparisons.
+
+To register the new sprint serialiser:
+```
+var settings = new JiraRestClientSettings();
+settings.CustomFieldSerializers["com.pyxis.greenhopper.jira:gh-sprint"] = new new GreenhopperSprintJsonCustomFieldValueSerialiser();
+var jira = new Jira("url", "user", "password", settings);
+```
+
+## Version 12.2.0 (10/25/2020)
+
+- [Issue 253](https://bitbucket.org/farmas/atlassian.net-sdk/issues/253) Exposes the avatar url's for projects and users.
+
 ## Version 12.1.0 (03/08/2020)
 
 - [Issue #509](https://bitbucket.org/farmas/atlassian.net-sdk/issues/503): Allows users to handle changes due to user privacy updates (GDPR).

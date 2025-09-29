@@ -15,17 +15,14 @@ namespace Atlassian.Jira
         internal const string DEFAULT_DATE_TIME_FORMAT = DEFAULT_DATE_FORMAT + " HH:mm";
         internal static CultureInfo DefaultCultureInfo = CultureInfo.GetCultureInfo("en-us");
 
-        private readonly JiraCache _cache;
         private readonly ServiceLocator _services;
 
         /// <summary>
         /// Create a client that connects with a JIRA server with specified dependencies.
         /// </summary>
-        public Jira(ServiceLocator services, JiraCache cache = null)
+        public Jira(ServiceLocator services)
         {
             _services = services;
-            _cache = cache ?? new JiraCache();
-
             this.Debug = false;
         }
 
@@ -42,7 +39,7 @@ namespace Atlassian.Jira
             settings = settings ?? new JiraRestClientSettings();
             var restClient = new JiraRestClient(url, username, password, settings);
 
-            return CreateRestClient(restClient, settings.Cache);
+            return CreateRestClient(restClient);
         }
 
         /// <summary>
@@ -75,7 +72,7 @@ namespace Atlassian.Jira
                 oAuthSignatureMethod,
                 settings);
 
-            return CreateRestClient(restClient, settings.Cache);
+            return CreateRestClient(restClient);
         }
 
         /// <summary>
@@ -83,10 +80,10 @@ namespace Atlassian.Jira
         /// </summary>
         /// <param name="restClient">Rest client to use.</param>
         /// <param name="cache">Cache to use.</param>
-        public static Jira CreateRestClient(IJiraRestClient restClient, JiraCache cache = null)
+        public static Jira CreateRestClient(IJiraRestClient restClient)
         {
             var services = new ServiceLocator();
-            var jira = new Jira(services, cache);
+            var jira = new Jira(services);
             ConfigureDefaultServices(services, jira, restClient);
             return jira;
         }
@@ -274,17 +271,6 @@ namespace Atlassian.Jira
             get
             {
                 return Services.Get<IServerInfoService>();
-            }
-        }
-
-        /// <summary>
-        /// Gets the cache for frequently retrieved server items from JIRA.
-        /// </summary>
-        public JiraCache Cache
-        {
-            get
-            {
-                return _cache;
             }
         }
 

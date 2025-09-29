@@ -4,6 +4,14 @@ Forked from https://bitbucket.org/farmas/atlassian.net-sdk/src/master/
 
 Contains utilities for interacting with  [Atlassian JIRA](http://www.atlassian.com/software/jira).
 
+## Nuget instructions
+This package is managed with Nuget, in order to update it, follow the next steps.
+
+```
+dotnet pack --configuration Release
+dotnet nuget push Atlassian.Jira/bin/Release/Apiiro.Atlassian.Jira.*.nupkg --source "github" --skip-duplicate --no-symbols true
+```
+
 ## Download
 
 - [Get the latest via NuGet](http://nuget.org/List/Packages/Atlassian.SDK).

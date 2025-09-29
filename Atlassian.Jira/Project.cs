@@ -91,12 +91,28 @@ namespace Atlassian.Jira
         }
 
         /// <summary>
+        /// The list of the Avatar URL's
+        /// </summary>
+        public AvatarUrls AvatarUrls
+        {
+            get
+            {
+                return _remoteProject.avatarUrls;
+            }
+        }
+
+        /// <summary>
+        /// Whether this project is archived
+        /// </summary>
+        public bool Archived => _remoteProject.archived;
+
+        /// <summary>
         /// Gets the issue types for the current project.
         /// </summary>
         /// <param name="token">Cancellation token for this operation.</param>
-        public Task<IEnumerable<IssueType>> GetIssueTypesAsync(CancellationToken token = default(CancellationToken))
+        public async Task<IEnumerable<IssueType>> GetIssueTypesAsync(CancellationToken token = default(CancellationToken))
         {
-            return _jira.IssueTypes.GetIssueTypesForProjectAsync(Key, token);
+            return (await _jira.Projects.GetProjectIssueTypesAndComponentsAsync(Key, token)).IssueTypes;
         }
 
         /// <summary>

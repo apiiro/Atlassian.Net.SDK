@@ -54,7 +54,7 @@ namespace Atlassian.Jira
             {
                 // There are multiple issue types with the same name. Possibly because there are a combination
                 //  of classic and NextGen projects in Jira. Get the issue types from the project if it is defined.
-                results = await jira.IssueTypes.GetIssueTypesForProjectAsync(ProjectKey).ConfigureAwait(false);
+                results = (await jira.Projects.GetProjectIssueTypesAndComponentsAsync(ProjectKey, token).ConfigureAwait(false)).IssueTypes;
             }
 
             return results as IEnumerable<JiraNamedEntity>;

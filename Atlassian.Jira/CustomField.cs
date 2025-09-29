@@ -1,5 +1,6 @@
 ﻿using System;
 using Atlassian.Jira.Remote;
+using Newtonsoft.Json.Linq;
 
 namespace Atlassian.Jira
 {
@@ -21,28 +22,10 @@ namespace Atlassian.Jira
             }
         }
 
-        internal RemoteField RemoteField
-        {
-            get
-            {
-                return this._remoteField;
-            }
-        }
+        internal RemoteField RemoteField => this._remoteField;
 
-        public string CustomType
-        {
-            get
-            {
-                return _remoteField.Schema?.Custom;
-            }
-        }
+        public string CustomType => _remoteField.Schema?.Custom;
 
-        public string CustomIdentifier
-        {
-            get
-            {
-                return _remoteField.Schema?.CustomId;
-            }
-        }
+        public string CustomIdentifier => _remoteField.Schema?.CustomId;
     }
 }

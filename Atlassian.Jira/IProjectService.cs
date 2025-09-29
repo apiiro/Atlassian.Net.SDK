@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,5 +21,12 @@ namespace Atlassian.Jira
         /// <param name="projectKey">Project key for the single project to load</param>
         /// <param name="token">Cancellation token for this operation.</param>
         Task<Project> GetProjectAsync(string projectKey, CancellationToken token = default(CancellationToken));
+
+        /// <summary>
+        /// Returns the issue types and components within JIRA for the project specified.
+        /// </summary>
+        Task<(IEnumerable<IssueType> IssueTypes, IEnumerable<ProjectComponent> Components)>
+            GetProjectIssueTypesAndComponentsAsync(string projectKey,
+                CancellationToken token = default(CancellationToken));
     }
 }
