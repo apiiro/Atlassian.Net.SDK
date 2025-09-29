@@ -112,9 +112,7 @@ namespace Atlassian.Jira.Remote
             var parameters = new
             {
                 jql = options.Jql,
-                startAt = options.StartAt,
                 maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
-                validateQuery = options.ValidateQuery,
                 fields = fields
             };
 

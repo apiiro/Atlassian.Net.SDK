@@ -1406,6 +1406,7 @@ namespace Atlassian.Jira.Remote
 
         /// <remarks/>
         [System.Xml.Serialization.SoapElementAttribute(IsNullable = true)]
+        [JsonConverter(typeof(DescriptionJsonConverter))]
         public string description
         {
             get
