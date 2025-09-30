@@ -113,6 +113,9 @@ namespace Atlassian.Jira.Remote
             var parameters = new
             {
                 jql = options.Jql,
+                maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
+                fields = fields
+
             };
 
             var result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", parameters, token).ConfigureAwait(false);
