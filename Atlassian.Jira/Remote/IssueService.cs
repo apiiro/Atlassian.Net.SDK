@@ -74,7 +74,7 @@ namespace Atlassian.Jira.Remote
             return new Issue(_jira, issue.RemoteIssue);
         }
 
-        public Task<IPagedQueryResult<Issue>> GetIssuesFromJqlAsync(string jql, int? maxIssues = default(int?), int startAt = 0, CancellationToken token = default(CancellationToken))
+        public Task<IPagedQueryResult<Issue>> GetIssuesFromJqlAsync(string jql, int? maxIssues = default(int?), int startAt = 0, CancellationToken token = default(CancellationToken), bool isJiraServer = false)
         {
             var options = new IssueSearchOptions(jql)
             {
@@ -83,10 +83,10 @@ namespace Atlassian.Jira.Remote
                 ValidateQuery = this.ValidateQuery
             };
 
-            return GetIssuesFromJqlAsync(options, token);
+            return GetIssuesFromJqlAsync(options, isJiraServer, token);
         }
 
-        public async Task<IPagedQueryResult<Issue>> GetIssuesFromJqlAsync(IssueSearchOptions options, CancellationToken token = default(CancellationToken))
+        public async Task<IPagedQueryResult<Issue>> GetIssuesFromJqlAsync(IssueSearchOptions options, bool isJiraServer, CancellationToken token = default(CancellationToken))
         {
             if (_jira.Debug)
             {
@@ -110,15 +110,32 @@ namespace Atlassian.Jira.Remote
                 fields.AddRange(options.AdditionalFields.Select(field => field.Trim().ToLowerInvariant()));
             }
 
-            var parameters = new
+            JToken result;
+            if (isJiraServer)
             {
-                jql = options.Jql,
-                maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
-                fields = fields
+                var JiraServerParams =  new
+                {
+                    jql = options.Jql,
+                    startAt = options.StartAt,
+                    maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
+                    validateQuery = options.ValidateQuery,
+                    fields = fields
+                };
+                result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/2/search", JiraServerParams, token).ConfigureAwait(false);
+            }
+            else
+            {
+                var parameters = new
+                {
+                    jql = options.Jql,
+                    maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
+                    fields = fields
 
-            };
+                };
+                result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", parameters, token).ConfigureAwait(false);
 
-            var result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", parameters, token).ConfigureAwait(false);
+            }
+
             var serializerSettings = await this.GetIssueSerializerSettingsAsync(token).ConfigureAwait(false);
             var issues = result["issues"]
                 .Cast<JObject>()
