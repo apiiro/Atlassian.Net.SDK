@@ -415,6 +415,19 @@ namespace Atlassian.Jira
         }
 
         /// <summary>
+        /// The attachments associated with this issue.
+        /// Note: Attachments are only populated if included in the JQL query fields.
+        /// </summary>
+        public IEnumerable<Attachment> Attachments
+        {
+            get
+            {
+                var remoteAttachments = _originalIssue.remoteAttachments ?? Array.Empty<RemoteAttachment>();
+                return remoteAttachments.Select(ra => new Attachment(_jira, ra));
+            }
+        }
+
+        /// <summary>
         /// The custom fields associated with this issue
         /// </summary>
         public CustomFieldValueCollection CustomFields
