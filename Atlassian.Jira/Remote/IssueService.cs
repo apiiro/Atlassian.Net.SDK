@@ -21,7 +21,7 @@ namespace Atlassian.Jira.Remote
 
         private readonly Jira _jira;
         private readonly JiraRestClientSettings _restSettings;
-        private readonly string[] _excludedFields = new string[] { "comment", "attachment", "issuelinks", "subtasks", "watches", "worklog" };
+        private readonly string[] _excludedFields = new string[] { "comment", "issuelinks", "subtasks", "watches", "worklog" };
 
         private JsonSerializerSettings _serializerSettings;
 
