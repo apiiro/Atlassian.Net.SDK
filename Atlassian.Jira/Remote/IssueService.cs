@@ -110,21 +110,21 @@ namespace Atlassian.Jira.Remote
                 fields.AddRange(options.AdditionalFields.Select(field => field.Trim().ToLowerInvariant()));
             }
 
-            JToken result;
-            if (isJiraServer)
+            async Task<JToken> ExecuteSearchRequestAsync()
             {
-                var JiraServerParams =  new
+                if (isJiraServer)
                 {
-                    jql = options.Jql,
-                    startAt = options.StartAt,
-                    maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
-                    validateQuery = options.ValidateQuery,
-                    fields = fields
-                };
-                result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/2/search", JiraServerParams, token).ConfigureAwait(false);
-            }
-            else
-            {
+                    var JiraServerParams =  new
+                    {
+                        jql = options.Jql,
+                        startAt = options.StartAt,
+                        maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
+                        validateQuery = options.ValidateQuery,
+                        fields = fields
+                    };
+                    return await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/2/search", JiraServerParams, token).ConfigureAwait(false);
+                }
+
                 var parameters = new
                 {
                     jql = options.Jql,
@@ -132,12 +132,37 @@ namespace Atlassian.Jira.Remote
                     fields = fields
 
                 };
-                result = await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", parameters, token).ConfigureAwait(false);
+                return await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", parameters, token).ConfigureAwait(false);
+            }
 
+            var result = await ExecuteSearchRequestAsync().ConfigureAwait(false);
+            var issuesJson = result["issues"];
+
+            if (issuesJson == null)
+            {
+                // The search endpoint occasionally returns a success response without an 'issues' field;
+                // retry once before deciding how to treat the response.
+                result = await ExecuteSearchRequestAsync().ConfigureAwait(false);
+                issuesJson = result["issues"];
+            }
+
+            if (issuesJson == null)
+            {
+                if (result["isLast"]?.Value<bool>() == true && result["nextPageToken"] == null)
+                {
+                    issuesJson = new JArray();
+                }
+                else
+                {
+                    var responseFields = result is JObject responseObject
+                        ? String.Join(", ", responseObject.Properties().Select(property => property.Name))
+                        : result.Type.ToString();
+                    throw new InvalidOperationException($"Jira search response does not contain an 'issues' field. Response fields: [{responseFields}].");
+                }
             }
 
             var serializerSettings = await this.GetIssueSerializerSettingsAsync(token).ConfigureAwait(false);
-            var issues = result["issues"]
+            var issues = issuesJson
                 .Cast<JObject>()
                 .Select(issueJson =>
                 {
