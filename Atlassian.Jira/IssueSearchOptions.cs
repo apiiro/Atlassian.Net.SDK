@@ -30,9 +30,16 @@ namespace Atlassian.Jira
         public int? MaxIssuesPerRequest { get; set; }
 
         /// <summary>
-        /// Index of the first issue to return (0-based).
+        /// Index of the first issue to return (0-based). Only honored by Jira Server/Data Center;
+        /// Jira Cloud's enhanced search paginates with <see cref="NextPageToken"/> instead.
         /// </summary>
         public int StartAt { get; set; } = 0;
+
+        /// <summary>
+        /// Page token returned by a previous Jira Cloud enhanced search ('rest/api/3/search/jql') response.
+        /// Null requests the first page. Ignored by Jira Server/Data Center.
+        /// </summary>
+        public string NextPageToken { get; set; }
 
         /// <summary>
         /// Whether to validate a JQL query.

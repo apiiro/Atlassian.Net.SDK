@@ -22,5 +22,11 @@ namespace Atlassian.Jira
         /// The total number of items.
         /// </summary>
         int TotalItems { get; }
+
+        /// <summary>
+        /// Token to request the next page from Jira Cloud's enhanced search.
+        /// Null when this is the last page or the endpoint does not use token pagination.
+        /// </summary>
+        string NextPageToken { get; }
     }
 }

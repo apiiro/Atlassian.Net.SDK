@@ -14,6 +14,7 @@ namespace Atlassian.Jira
         private readonly int _startAt;
         private readonly int _itemsPerPage;
         private readonly int _totalItems;
+        private readonly string _nextPageToken;
 
         /// <summary>
         /// Create a new instance of PagedQueryResult with all metadata provided.
@@ -22,12 +23,14 @@ namespace Atlassian.Jira
         /// <param name="startAt">Index within the total items where this page's paged result starts.</param>
         /// <param name="itemsPerPage">Number of items returned per page.</param>
         /// <param name="totalItems">Number of total items available on the server.</param>
-        public PagedQueryResult(IEnumerable<T> enumerable, int startAt, int itemsPerPage, int totalItems)
+        /// <param name="nextPageToken">Token to request the next page, when the endpoint uses token pagination.</param>
+        public PagedQueryResult(IEnumerable<T> enumerable, int startAt, int itemsPerPage, int totalItems, string nextPageToken = null)
         {
             _enumerable = enumerable;
             _startAt = startAt;
             _itemsPerPage = itemsPerPage;
             _totalItems = totalItems;
+            _nextPageToken = nextPageToken;
         }
 
         /// <summary>
@@ -41,7 +44,8 @@ namespace Atlassian.Jira
                 items,
                 GetPropertyOrDefault<int>(pagedJson, "startAt"),
                 GetPropertyOrDefault<int>(pagedJson, "maxResults"),
-                GetPropertyOrDefault<int>(pagedJson, "total"));
+                GetPropertyOrDefault<int>(pagedJson, "total"),
+                GetPropertyOrDefault<string>(pagedJson, "nextPageToken"));
         }
 
         /// <summary>
@@ -66,6 +70,15 @@ namespace Atlassian.Jira
         public int TotalItems
         {
             get { return _totalItems; }
+        }
+
+        /// <summary>
+        /// Token to request the next page from Jira Cloud's enhanced search.
+        /// Null when this is the last page or the endpoint does not use token pagination.
+        /// </summary>
+        public string NextPageToken
+        {
+            get { return _nextPageToken; }
         }
 
         /// <summary>
