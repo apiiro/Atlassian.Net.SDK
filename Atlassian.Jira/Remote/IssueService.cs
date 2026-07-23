@@ -88,6 +88,8 @@ namespace Atlassian.Jira.Remote
 
         public async Task<IPagedQueryResult<Issue>> GetIssuesFromJqlAsync(IssueSearchOptions options, bool isJiraServer, CancellationToken token = default(CancellationToken))
         {
+            isJiraServer = isJiraServer || _restSettings.IsJiraServer;
+
             if (_jira.Debug)
             {
                 Trace.WriteLine("[GetFromJqlAsync] JQL: " + options.Jql);
@@ -125,13 +127,27 @@ namespace Atlassian.Jira.Remote
                     return await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/2/search", JiraServerParams, token).ConfigureAwait(false);
                 }
 
-                var parameters = new
+                object parameters;
+                if (options.NextPageToken == null)
                 {
-                    jql = options.Jql,
-                    maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
-                    fields = fields
+                    parameters = new
+                    {
+                        jql = options.Jql,
+                        maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
+                        fields = fields
+                    };
+                }
+                else
+                {
+                    parameters = new
+                    {
+                        jql = options.Jql,
+                        maxResults = options.MaxIssuesPerRequest ?? this.MaxIssuesPerRequest,
+                        fields = fields,
+                        nextPageToken = options.NextPageToken
+                    };
+                }
 
-                };
                 return await _jira.RestClient.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", parameters, token).ConfigureAwait(false);
             }
 
@@ -521,24 +537,53 @@ namespace Atlassian.Jira.Remote
 
             var distinctIssueKeys = issueKeys.Distinct();
             var jqlQuery = $"key in ({string.Join(",", distinctIssueKeys)})";
-            var startAtIndex = 0;
             var issues = new List<Issue>();
-            IPagedQueryResult<Issue> query;
 
-            do
+            if (_restSettings.IsJiraServer)
             {
-                // Jira limits each request, so we must page it out
-                query = await GetIssuesFromJqlAsync(
-                        jqlQuery,
-                        MaxRetrievedIssuesPerRequest,
-                        startAtIndex,
-                        token
-                    )
-                    .ConfigureAwait(false);
-                issues.AddRange(query.ToList());
+                var startAtIndex = 0;
+                IPagedQueryResult<Issue> query;
 
-                startAtIndex += 100;
-            } while (startAtIndex <= query.TotalItems);
+                do
+                {
+                    // Jira limits each request, so we must page it out
+                    query = await GetIssuesFromJqlAsync(
+                            jqlQuery,
+                            MaxRetrievedIssuesPerRequest,
+                            startAtIndex,
+                            token
+                        )
+                        .ConfigureAwait(false);
+                    issues.AddRange(query.ToList());
+
+                    startAtIndex += MaxRetrievedIssuesPerRequest;
+                } while (startAtIndex <= query.TotalItems);
+            }
+            else
+            {
+                // Jira Cloud's enhanced search paginates with a token instead of startAt/total
+                var options = new IssueSearchOptions(jqlQuery)
+                {
+                    MaxIssuesPerRequest = MaxRetrievedIssuesPerRequest,
+                    ValidateQuery = this.ValidateQuery
+                };
+
+                IPagedQueryResult<Issue> page;
+
+                do
+                {
+                    var requestedPageToken = options.NextPageToken;
+                    page = await GetIssuesFromJqlAsync(options, isJiraServer: false, token).ConfigureAwait(false);
+                    issues.AddRange(page.ToList());
+
+                    if (page.NextPageToken != null && page.NextPageToken == requestedPageToken)
+                    {
+                        throw new InvalidOperationException("Jira search returned the same nextPageToken twice; aborting pagination.");
+                    }
+
+                    options.NextPageToken = page.NextPageToken;
+                } while (options.NextPageToken != null);
+            }
 
             return DistinctBy(issues, issue => issue.Key.Value).ToDictionary(issue => issue.Key.Value);
         }

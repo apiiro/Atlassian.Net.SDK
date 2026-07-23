@@ -29,6 +29,13 @@ namespace Atlassian.Jira
         public bool EnableRequestTrace { get; set; }
 
         /// <summary>
+        /// Whether the target instance is Jira Server/Data Center (as opposed to Jira Cloud).
+        /// When true, issue searches use the 'rest/api/2/search' endpoint instead of the
+        /// Cloud-only 'rest/api/3/search/jql' endpoint.
+        /// </summary>
+        public bool IsJiraServer { get; set; }
+
+        /// <summary>
         /// Dictionary of serializers for custom fields.
         /// </summary>
         public IDictionary<string, ICustomFieldValueSerializer> CustomFieldSerializers { get; set; } = new Dictionary<string, ICustomFieldValueSerializer>();
