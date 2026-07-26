@@ -20,7 +20,7 @@ namespace Atlassian.Jira.Test.Integration
                 AdditionalFields = new List<string>() { "summary" }
             };
 
-            var issues = await jira.Issues.GetIssuesFromJqlAsync(options);
+            var issues = await jira.Issues.GetIssuesFromJqlAsync(options, isJiraServer: true);
             Assert.NotNull(issues.First().Summary);
             Assert.Null(issues.First().Assignee);
         }
@@ -35,7 +35,7 @@ namespace Atlassian.Jira.Test.Integration
                 AdditionalFields = new List<string>() { "attachment" }
             };
 
-            var issues = await jira.Issues.GetIssuesFromJqlAsync(options);
+            var issues = await jira.Issues.GetIssuesFromJqlAsync(options, isJiraServer: true);
             var issue = issues.First();
             Assert.Null(issue.Summary);
             Assert.NotEmpty(issue.AdditionalFields.Attachments);
@@ -65,7 +65,7 @@ namespace Atlassian.Jira.Test.Integration
                 AdditionalFields = new List<string>() { "comment", "watches", "worklog" }
             };
 
-            var issues = await jira.Issues.GetIssuesFromJqlAsync(options);
+            var issues = await jira.Issues.GetIssuesFromJqlAsync(options, isJiraServer: true);
             var serverIssue = issues.First();
 
             // Assert
