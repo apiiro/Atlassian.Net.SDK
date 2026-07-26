@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore Atlassian.sln
+
+      - name: Build
+        run: dotnet build Atlassian.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Atlassian.Jira.Test --configuration Release --no-build
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: Atlassian.Jira/bin/Release/*.nupkg
+          if-no-files-found: error
