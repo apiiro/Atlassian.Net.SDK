@@ -21,6 +21,8 @@ namespace Atlassian.Jira.Remote
     /// </summary>
     public class JiraRestClient : IJiraRestClient
     {
+        private const int MaxQuotedContentLength = 1000;
+
         private readonly RestClient _restClient;
         private readonly JiraRestClientSettings _clientSettings;
 
@@ -185,7 +187,7 @@ namespace Atlassian.Jira.Remote
             }
         }
 
-        private JToken GetValidJsonFromResponse(IRestRequest request, IRestResponse response)
+        internal JToken GetValidJsonFromResponse(IRestRequest request, IRestResponse response)
         {
             var content = response.Content != null ? response.Content.Trim() : string.Empty;
 
@@ -244,11 +246,11 @@ namespace Atlassian.Jira.Remote
 
                 try
                 {
-                    parsedContent = JToken.Parse(content);
+                    parsedContent = ParseJson(content);
                 }
                 catch (JsonReaderException ex)
                 {
-                    throw new InvalidOperationException(String.Format("Failed to parse response as JSON. Content: {0}", content), ex);
+                    throw new InvalidOperationException(String.Format("Failed to parse response as JSON. Content: {0}", QuoteContent(content)), ex);
                 }
 
                 if (parsedContent != null && parsedContent.Type == JTokenType.Object && parsedContent["errorMessages"] != null)
@@ -258,6 +260,28 @@ namespace Atlassian.Jira.Remote
 
                 return parsedContent;
             }
+        }
+
+        private JToken ParseJson(string content)
+        {
+            using (var reader = new JsonTextReader(new StringReader(content)) { MaxDepth = _clientSettings.JsonSerializerSettings.MaxDepth })
+            {
+                var token = JToken.Load(reader);
+
+                // Like JToken.Parse, throw on anything after the first value other than comments.
+                while (reader.Read())
+                {
+                }
+
+                return token;
+            }
+        }
+
+        private static string QuoteContent(string content)
+        {
+            return content.Length <= MaxQuotedContentLength
+                ? content
+                : $"{content.Substring(0, MaxQuotedContentLength)}... ({content.Length} characters in total)";
         }
 
         private async Task<JToken> FallbackToHttpClientOnFailureAsync(IRestRequest request)
@@ -294,7 +318,10 @@ namespace Atlassian.Jira.Remote
                 $"Retry request attempt headers: {Convert.ToBase64String(Encoding.ASCII.GetBytes(response.Headers.ToString()))}");
 
             return await JToken.LoadAsync(
-                new JsonTextReader(new StreamReader(await response.Content.ReadAsStreamAsync())));
+                new JsonTextReader(new StreamReader(await response.Content.ReadAsStreamAsync()))
+                {
+                    MaxDepth = _clientSettings.JsonSerializerSettings.MaxDepth
+                });
         }
     }
 }

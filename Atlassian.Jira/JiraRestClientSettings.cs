@@ -11,6 +11,12 @@ namespace Atlassian.Jira
     /// </summary>
     public class JiraRestClientSettings
     {
+        /// <summary>
+        /// Default maximum depth of the JSON read from Jira. Rich text in the Atlassian Document Format, such as
+        /// an issue description with nested lists, can nest deeper than Json.NET's default of 64.
+        /// </summary>
+        public const int DefaultJsonMaxDepth = 512;
+
         private bool _userPrivacyEnabled;
 
         private static IEnumerable<JsonConverter> _defaultJsonConverters = new List<JsonConverter>()
@@ -41,7 +47,7 @@ namespace Atlassian.Jira
         public IDictionary<string, ICustomFieldValueSerializer> CustomFieldSerializers { get; set; } = new Dictionary<string, ICustomFieldValueSerializer>();
 
         /// <summary>
-        /// The json global serializer settings to use.
+        /// The json global serializer settings to use. Its MaxDepth also limits how deeply the responses read from Jira can nest.
         /// </summary>
         public JsonSerializerSettings JsonSerializerSettings { get; private set; } = new JsonSerializerSettings();
 
@@ -76,6 +82,7 @@ namespace Atlassian.Jira
         {
 
             JsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+            JsonSerializerSettings.MaxDepth = DefaultJsonMaxDepth;
 
             AddCoreCustomFieldValueSerializers();
             AddDefaultJsonConverters();

@@ -1,9 +1,11 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Atlassian.Jira.Remote;
 using Moq;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using Xunit;
@@ -24,8 +26,17 @@ namespace Atlassian.Jira.Test
                 .Returns(Task.FromResult(Enumerable.Empty<CustomField>()));
             jira.RestService
                 .Setup(c => c.ExecuteRequestAsync(Method.POST, searchResource, It.IsAny<object>(), It.IsAny<CancellationToken>()))
-                .ReturnsInOrder(responses.Select(response => (object)Task.FromResult(JToken.Parse(response))).ToArray());
+                .ReturnsInOrder(responses.Select(response => (object)Task.FromResult(ParseWithoutDepthLimit(response))).ToArray());
             return jira;
+        }
+
+        // Stands in for JiraRestClient, which parses responses with its own depth limit.
+        private static JToken ParseWithoutDepthLimit(string json)
+        {
+            using (var reader = new JsonTextReader(new StringReader(json)) { MaxDepth = null })
+            {
+                return JToken.Load(reader);
+            }
         }
 
         private static IssueService CreateIssueService(TestableJira jira, bool isJiraServer = false)
@@ -106,6 +117,19 @@ namespace Atlassian.Jira.Test
             jira.RestService.Verify(
                 c => c.ExecuteRequestAsync(Method.POST, "rest/api/3/search/jql", It.IsAny<object>(), It.IsAny<CancellationToken>()),
                 Times.Never());
+        }
+
+        [Fact]
+        public async Task GetIssuesFromJqlAsync_DescriptionNestedDeeperThan64_ReturnsIssue()
+        {
+            var jira = CreateJiraWithSearchResponses(DeeplyNestedJson.SearchResponse(100));
+            var service = CreateIssueService(jira);
+
+            var result = await service.GetIssuesFromJqlAsync(new IssueSearchOptions("project = TST"), false);
+
+            var issue = Assert.Single(result);
+            Assert.Equal("TST-1", issue.Key.Value);
+            Assert.Contains("level 100", issue.Description);
         }
 
         [Fact]

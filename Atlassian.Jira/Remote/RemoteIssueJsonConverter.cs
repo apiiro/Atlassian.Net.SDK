@@ -43,7 +43,7 @@ namespace Atlassian.Jira.Remote
             var fields = issueObj["fields"] as JObject;
 
             // deserialize the RemoteIssue from the fields json.
-            var textReader = new JsonTextReader(new StringReader(fields.ToString()));
+            var textReader = new JsonTextReader(new StringReader(fields.ToString())) { MaxDepth = serializer.MaxDepth };
             var remoteIssue = serializer.Deserialize<RemoteIssue>(textReader);
 
             // set the id and key of the remoteissue.
