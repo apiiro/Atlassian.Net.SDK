@@ -37,5 +37,19 @@ namespace Atlassian.Jira.Test
                 $"Failed to parse response as JSON. Content: {content.Substring(0, 1000)}... ({content.Length} characters in total)",
                 exception.Message);
         }
+
+        [Fact]
+        public void GetValidJsonFromResponse_QuoteLimitInsideSurrogatePair_KeepsPairWhole()
+        {
+            var client = new JiraRestClient("http://localhost");
+            var content = "[\"" + new string('x', 997) + "\U0001F600\"";
+
+            var exception = Assert.Throws<InvalidOperationException>(
+                () => client.GetValidJsonFromResponse(new RestRequest(), OkResponse(content)));
+
+            Assert.Equal(
+                $"Failed to parse response as JSON. Content: {content.Substring(0, 999)}... ({content.Length} characters in total)",
+                exception.Message);
+        }
     }
 }

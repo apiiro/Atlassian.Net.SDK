@@ -279,9 +279,13 @@ namespace Atlassian.Jira.Remote
 
         private static string QuoteContent(string content)
         {
-            return content.Length <= MaxQuotedContentLength
-                ? content
-                : $"{content.Substring(0, MaxQuotedContentLength)}... ({content.Length} characters in total)";
+            if (content.Length <= MaxQuotedContentLength)
+            {
+                return content;
+            }
+
+            var length = char.IsHighSurrogate(content[MaxQuotedContentLength - 1]) ? MaxQuotedContentLength - 1 : MaxQuotedContentLength;
+            return $"{content.Substring(0, length)}... ({content.Length} characters in total)";
         }
 
         private async Task<JToken> FallbackToHttpClientOnFailureAsync(IRestRequest request)

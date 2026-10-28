@@ -15,7 +15,7 @@ namespace Atlassian.Jira
         /// Default maximum depth of the JSON read from Jira. Rich text in the Atlassian Document Format, such as
         /// an issue description with nested lists, can nest deeper than Json.NET's default of 64.
         /// </summary>
-        public const int DefaultJsonMaxDepth = 512;
+        public static readonly int DefaultJsonMaxDepth = 512;
 
         private bool _userPrivacyEnabled;
 
