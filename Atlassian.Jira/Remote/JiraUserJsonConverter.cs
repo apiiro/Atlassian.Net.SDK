@@ -26,6 +26,7 @@ namespace Atlassian.Jira.Remote
             return new JiraUser()
             {
                 AccountId = remoteUser.accountId,
+                AccountType = remoteUser.accountType,
                 DisplayName = remoteUser.displayName,
                 Email = remoteUser.emailAddress,
                 IsActive = remoteUser.active,

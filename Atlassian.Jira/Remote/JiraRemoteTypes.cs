@@ -583,6 +583,7 @@ namespace Atlassian.Jira.Remote
     public class RemoteJiraUser
     {
         public string accountId { get; set; }
+        public string accountType { get; set; }
         public string key { get; set; }
         public string name { get; set; }
         public string displayName { get; set; }
