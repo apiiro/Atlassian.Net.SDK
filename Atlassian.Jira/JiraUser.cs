@@ -10,6 +10,8 @@ namespace Atlassian.Jira
         /// </summary>
         public string AccountId { get; set; }
 
+        public string AccountType { get; set; }
+
         /// <summary>
         /// The identifier for the user as defined by JIRA.
         /// </summary>
